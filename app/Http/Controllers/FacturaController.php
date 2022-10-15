@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FacturaStoreRequest;
 use App\Repositories\FacturaRepository;
+use App\Repositories\ItemRepository;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,9 +12,12 @@ class FacturaController extends Controller
 {
 
     private $facturaRepository;
-    public function __construct(FacturaRepository $facturaRepository)
+    private $itemRepository;
+
+    public function __construct(FacturaRepository $facturaRepository, ItemRepository $itemRepository)
     {
         $this->facturaRepository = $facturaRepository;
+        $this->itemRepository = $itemRepository;
     }
 
     public function index()
@@ -43,9 +47,17 @@ class FacturaController extends Controller
         if (empty($request->id)) $factura = $this->facturaRepository->new();
         else $factura = $this->facturaRepository->find($request->id);
         // unset($request, $items);
-        foreach ($request->all() as $key => $value) {
-            if($key != 'items') $factura[$key] = $value;
-        }
+        foreach ($request->all() as $key => $value) if ($key != 'items') $factura[$key] = $value;
+        foreach ($request->items as $key => $value) :
+            $item = $this->itemRepository->new();
+            $item->descripcion = $value->descripcion;
+            $item->cantidad = $value->cantidad;
+            $item->valor_unitario = $value->valor_unitario;
+            $item->valor_total = $value->valor_total;
+            $item->factura_id = $factura->id;
+            $this->itemRepository->save($item);
+        endforeach;
+
 
         $factura->valor_total = $request->valor + ($request->valor * ($request->iva / 100));
         $this->facturaRepository->save($factura);

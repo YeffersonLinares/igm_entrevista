@@ -17,4 +17,8 @@
     <body class="font-sans antialiased">
         @inertia
     </body>
+
+        <script defer src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+        <script defer src="https://cdn.datatables.net/1.12.1/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.8/js/select2.min.js" defer></script>
 </html>

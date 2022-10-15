@@ -32,7 +32,7 @@
             <div class="d-flex justify-content-end me-5">
                 <Button @click="pantalla='create'">Crear</Button>
             </div>
-            <table class="table" id="tabla">
+            <table class="table table-striped table-bordered" id="tabla">
                 <thead>
                     <tr>
                         <th>Código</th>
@@ -52,9 +52,9 @@
                         <td> {{i.created_at}} </td>
                         <td>
                             <div class="d-flex">
-                                <button class="btn btn-danger" @click="eliminar(i.id)">Eliminar</button>
-                                <button class="btn btn-warning" @click="edit(i)">Editar</button>
-                                <button class="btn btn-info" @click="detalles(i)">Detalles</button>
+                                <Button class="me-3" @click="eliminar(i.id)">Eliminar</Button>
+                                <Button class="me-3" @click="edit(i)">Editar</Button>
+                                <Button class="me-3" @click="detalles(i)">Detalles</Button>
                             </div>
                         </td>
                     </tr>
@@ -63,6 +63,9 @@
         </div>
     </div>
     <div v-if="pantalla=='create'">
+        <div class="container-fluid my-3 d-flex justify-content-end">
+            <Button @click="getResults()">Atrás</Button>
+        </div>
         <div class="container mt-4 border p-3">
             <h5 class="text-center my-3">Factura</h5>
             <div class="row">
@@ -72,7 +75,8 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <Label required="1">NIT del emisor</Label>
-                    <Input :error="errors.emisor_nit" v-model="factura.emisor_nit" :disabled="disabled" @keypress="$isNumber($event, factura.emisor_nit)" />
+                    <Input :error="errors.emisor_nit" v-model="factura.emisor_nit" :disabled="disabled"
+                        @keypress="$isNumber($event, factura.emisor_nit)" />
                 </div>
             </div>
             <div class="row">
@@ -82,13 +86,15 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <Label required="1">NIT del receptor</Label>
-                    <Input :error="errors.receptor_nit" v-model="factura.receptor_nit" :disabled="disabled" @keypress="$isNumber($event, factura.receptor_nit)" />
+                    <Input :error="errors.receptor_nit" v-model="factura.receptor_nit" :disabled="disabled"
+                        @keypress="$isNumber($event, factura.receptor_nit)" />
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <Label required="1">Valor sin IVA</Label>
-                    <Input :error="errors.valor" v-model="factura.valor" @keyup="cal_valor_total()" :disabled="disabled" />
+                    <Input :error="errors.valor" v-model="factura.valor" @keyup="cal_valor_total()"
+                        disabled />
                 </div>
                 <div class="col-md-4 mb-3">
                     <Label required="1">IVA</Label>
@@ -101,30 +107,52 @@
             </div>
         </div>
 
-        <div class="container border mt-4 p-3">
-            <h5 class="text-center my-3">Items de Factura</h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <Label required="1">Descripción del Item</Label>
-                    <Input :disabled="disabled" />
+        <div class="row border mt-4 p-3">
+            <div class="col-md-6 border p-3">
+                <h5 class="text-center my-3">Items de Factura</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <Label required="1">Descripción del Item</Label>
+                        <Input :disabled="disabled" v-model="item.descripcion" />
+                    </div>
+                    <div class="col-md-6">
+                        <Label required="1">Cantidad</Label>
+                        <Input :disabled="disabled" v-model="item.cantidad" @keyup="valor_item()" />
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <Label required="1">Cantidad</Label>
-                    <Input :disabled="disabled"/>
+                <div class="row">
+                    <div class="col-md-6">
+                        <Label required="1">Valor Unitario</Label>
+                        <Input :disabled="disabled" v-model="item.valor_unitario" @keyup="valor_item()" />
+                    </div>
+                    <div class="col-md-6">
+                        <Label required="1">Valor Total</Label>
+                        <Input disabled v-model="item.valor_total" />
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center my-4" v-if="!disabled">
+                    <Button @click="add_item()">Guardar Item</Button>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <Label required="1">Valor Unitario</Label>
-                    <Input :disabled="disabled"/>
-                </div>
-                <div class="col-md-6">
-                    <Label required="1">Valor Total</Label>
-                    <Input :disabled="disabled"/>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center my-4" v-if="!disabled">
-                <Button>Guardar Item</Button>
+            <div class="col-md-6 border p-3">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Valor Unitario</th>
+                            <th>Valor Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(i, index) in factura.items" :key="index">
+                            <td>{{i.descripcion }}</td>
+                            <td>{{i.cantidad}}</td>
+                            <td>{{i.valor_unitario}}</td>
+                            <td>{{i.valor_total}}</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -139,11 +167,14 @@ import { defineComponent } from "vue";
 import Input from "../ComponentsVuexy/Input.vue";
 import Label from "../ComponentsVuexy/Label.vue";
 import Button from "../ComponentsVuexy/Button.vue";
+import ButtonSinFondo from "../ComponentsVuexy/ButtonSinFondo.vue";
+import "datatables.net-bs4";
 export default defineComponent({
     components: {
         Input,
         Label,
-        Button
+        Button,
+        ButtonSinFondo
     },
     props: {
         facturas_props: Array
@@ -152,15 +183,12 @@ export default defineComponent({
         return {
             facturas: this.facturas_props,
             filtros: {},
-            pantalla: 'list',
+            pantalla: 'create',
             factura: { id: '', valor_total: 0, iva: 0, valor: 0, items: [] },
             errors: {},
-            disabled: false
+            disabled: false,
+            item: {valor_unitario: 0, cantidad: 0}
         }
-    },
-    created() {
-        // this.facturas =
-        // alert('llego')
     },
     methods: {
         eliminar(id) {
@@ -195,6 +223,19 @@ export default defineComponent({
         },
         cal_valor_total() {
             this.factura.valor_total = parseInt(this.factura.valor) + (parseInt(this.factura.valor) * (parseInt(this.factura.iva) / 100))
+        },
+        add_item() {
+            this.factura.items.push(this.item)
+            this.item = {valor_unitario: 0, cantidad: 0}
+        },
+        valor_item() {
+            this.item.valor_total = parseInt(this.item.valor_unitario) * (parseInt(this.item.cantidad))
+        },
+        cal_valor_factura() {
+            this.factura.valor = 0
+            this.factura.items.forEach(element => {
+                // this.factura.valor
+            });
         }
     },
 })
