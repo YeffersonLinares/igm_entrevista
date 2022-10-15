@@ -6,6 +6,7 @@ use App\Http\Requests\FacturaStoreRequest;
 use App\Repositories\FacturaRepository;
 use App\Repositories\ItemRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class FacturaController extends Controller
@@ -44,27 +45,36 @@ class FacturaController extends Controller
 
     public function store(FacturaStoreRequest $request)
     {
-        if (empty($request->id)) $factura = $this->facturaRepository->new();
-        else $factura = $this->facturaRepository->find($request->id);
-        // unset($request, $items);
-        foreach ($request->all() as $key => $value) if ($key != 'items') $factura[$key] = $value;
-        foreach ($request->items as $key => $value) :
-            $item = $this->itemRepository->new();
-            $item->descripcion = $value->descripcion;
-            $item->cantidad = $value->cantidad;
-            $item->valor_unitario = $value->valor_unitario;
-            $item->valor_total = $value->valor_total;
-            $item->factura_id = $factura->id;
-            $this->itemRepository->save($item);
-        endforeach;
+        try {
+            DB::beginTransaction();
+            if (empty($request->id)) $factura = $this->facturaRepository->new();
+            else $factura = $this->facturaRepository->find($request->id);
+            foreach ($request->all() as $key => $value) if ($key != 'items') $factura[$key] = $value;
+            $factura->valor_total = $request->valor + ($request->valor * ($request->iva / 100));
+            $this->facturaRepository->save($factura);
+            if (empty($request->id)) :
+                foreach ($request->items as $key => $value) :
+                    $item = $this->itemRepository->new();
+                    $item->descripcion = $value['descripcion'];
+                    $item->cantidad = $value['cantidad'];
+                    $item->valor_unitario = $value['valor_unitario'];
+                    $item->valor_total = $value['valor_total'];
+                    $item->factura_id = $factura->id;
+                    $this->itemRepository->save($item);
+                endforeach;
+            endif;
+            DB::commit();
 
-
-        $factura->valor_total = $request->valor + ($request->valor * ($request->iva / 100));
-        $this->facturaRepository->save($factura);
-
-        return response()->json([
-            'status' => 200,
-            'msg' => 'Factura guardada con éxito',
-        ]);
+            return response()->json([
+                'status' => 200,
+                'msg' => 'Factura guardada con éxito',
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 500,
+                'msg' => 'Error en el servidor',
+            ]);
+        }
     }
 }

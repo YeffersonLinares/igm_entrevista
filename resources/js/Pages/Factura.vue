@@ -30,7 +30,7 @@
 
         <div>
             <div class="d-flex justify-content-end me-5">
-                <Button @click="pantalla='create'">Crear</Button>
+                <Button @click="pantalla='create'; disabled = false">Crear</Button>
             </div>
             <table class="table table-striped table-bordered" id="tabla">
                 <thead>
@@ -93,8 +93,7 @@
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <Label required="1">Valor sin IVA</Label>
-                    <Input :error="errors.valor" v-model="factura.valor" @keyup="cal_valor_total()"
-                        disabled />
+                    <Input :error="errors.valor" v-model="factura.valor" @keyup="cal_valor_total()" disabled />
                 </div>
                 <div class="col-md-4 mb-3">
                     <Label required="1">IVA</Label>
@@ -113,21 +112,23 @@
                 <div class="row">
                     <div class="col-md-6">
                         <Label required="1">Descripción del Item</Label>
-                        <Input :disabled="disabled" v-model="item.descripcion" />
+                        <Input :disabled="disabled" v-model="item.descripcion" :error="errors_item.descripcion" />
                     </div>
                     <div class="col-md-6">
                         <Label required="1">Cantidad</Label>
-                        <Input :disabled="disabled" v-model="item.cantidad" @keyup="valor_item()" />
+                        <Input :disabled="disabled" v-model="item.cantidad" @keyup="valor_item()"
+                            @keypress="$isNumber($event, item.cantidad)" :error="errors_item.cantidad" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
                         <Label required="1">Valor Unitario</Label>
-                        <Input :disabled="disabled" v-model="item.valor_unitario" @keyup="valor_item()" />
+                        <Input :disabled="disabled" v-model="item.valor_unitario" @keyup="valor_item()"
+                            @keypress="$isNumber($event, item.valor_unitario)" :error="errors_item.valor_unitario" />
                     </div>
                     <div class="col-md-6">
                         <Label required="1">Valor Total</Label>
-                        <Input disabled v-model="item.valor_total" />
+                        <Input disabled v-model="item.valor_total" :error="errors_item.valor_total" />
                     </div>
                 </div>
                 <div class="d-flex justify-content-center my-4" v-if="!disabled">
@@ -142,6 +143,7 @@
                             <th>Cantidad</th>
                             <th>Valor Unitario</th>
                             <th>Valor Total</th>
+                            <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -150,6 +152,9 @@
                             <td>{{i.cantidad}}</td>
                             <td>{{i.valor_unitario}}</td>
                             <td>{{i.valor_total}}</td>
+                            <td>
+                                <Button @click="delete_item(i, index)">Eliminar</Button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -187,7 +192,8 @@ export default defineComponent({
             factura: { id: '', valor_total: 0, iva: 0, valor: 0, items: [] },
             errors: {},
             disabled: false,
-            item: {valor_unitario: 0, cantidad: 0}
+            item: { id: '',valor_unitario: 0, cantidad: 0, descripcion: '' },
+            errors_item: {}
         }
     },
     methods: {
@@ -199,6 +205,7 @@ export default defineComponent({
         },
         edit(i) {
             this.factura = i
+            this.disabled = false
             this.pantalla = 'create'
         },
         detalles(i) {
@@ -211,12 +218,16 @@ export default defineComponent({
                 this.facturas = res.data
                 this.factura = { id: '', valor_total: 0, iva: 0, valor: 0, items: [] }
                 this.pantalla = 'list'
+                this.errors = {}
+                this.errors_item = {}
             })
         },
         store() {
             axios.post(route('web.factura.store'), this.factura).then(res => {
                 this.$alert(res.data)
                 this.getResults()
+                this.errors_item = {}
+                this.errors = {}
             }).catch(errors => {
                 this.errors = errors.response.data.errors;
             })
@@ -225,8 +236,14 @@ export default defineComponent({
             this.factura.valor_total = parseInt(this.factura.valor) + (parseInt(this.factura.valor) * (parseInt(this.factura.iva) / 100))
         },
         add_item() {
+            if(!this.$validacionFormulario(this.item, ['id']).exito) {
+                this.errors_item = this.$validacionFormulario(this.item).errors
+                // console.log('this.errors_item ==> ', this.errors_item);
+                return
+            }
             this.factura.items.push(this.item)
-            this.item = {valor_unitario: 0, cantidad: 0}
+            this.item = { valor_unitario: 0, cantidad: 0 }
+            this.cal_valor_factura()
         },
         valor_item() {
             this.item.valor_total = parseInt(this.item.valor_unitario) * (parseInt(this.item.cantidad))
@@ -234,8 +251,12 @@ export default defineComponent({
         cal_valor_factura() {
             this.factura.valor = 0
             this.factura.items.forEach(element => {
-                // this.factura.valor
+                this.factura.valor += element.cantidad * element.valor_unitario
             });
+            this.cal_valor_total()
+        },
+        delete_item(i, index) {
+            this.factura.items.splice(index, 1)
         }
     },
 })
