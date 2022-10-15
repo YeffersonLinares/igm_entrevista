@@ -188,7 +188,7 @@ export default defineComponent({
         return {
             facturas: this.facturas_props,
             filtros: {},
-            pantalla: 'create',
+            pantalla: 'list',
             factura: { id: '', valor_total: 0, iva: 0, valor: 0, items: [] },
             errors: {},
             disabled: false,
