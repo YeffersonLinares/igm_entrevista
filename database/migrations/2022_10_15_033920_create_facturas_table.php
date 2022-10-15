@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('valor');
             $table->integer('iva');
             $table->integer('valor_total');
+            $table->integer('estado')->default(1);
             $table->timestamps();
         });
     }
