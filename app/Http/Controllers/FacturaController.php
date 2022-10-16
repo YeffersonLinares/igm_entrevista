@@ -23,6 +23,7 @@ class FacturaController extends Controller
 
     public function index()
     {
+        // dd('llego');
         $facturas = $this->list(new Request());
         return Inertia::render('Factura', [
             'facturas_props' => $facturas

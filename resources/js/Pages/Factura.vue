@@ -1,6 +1,10 @@
 <template>
 
-    <div v-if="pantalla=='list'">
+    <div class="d-flex justify-content-end p-3">
+        <Button @click="logout()">Logout</Button>
+    </div>
+
+    <div class="container-fluid" v-if="pantalla=='list'">
         <div class="row mt-4 mb-3">
             <div class="col-md-4 mb-3">
                 <Label>Código</Label>
@@ -62,7 +66,7 @@
             </table>
         </div>
     </div>
-    <div v-if="pantalla=='create'">
+    <div class="container-fluid" v-if="pantalla=='create'">
         <div class="container-fluid my-3 d-flex justify-content-end">
             <Button @click="getResults()">Atrás</Button>
         </div>
@@ -153,7 +157,8 @@
                             <td>{{i.valor_unitario}}</td>
                             <td>{{i.valor_total}}</td>
                             <td>
-                                <Button @click="delete_item(i, index)">Eliminar</Button>
+                                <Button v-if="$isEmpty(i.id)" @click="delete_item(i, index)">Eliminar</Button>
+                                <span v-else>//</span>
                             </td>
                         </tr>
                     </tbody>
@@ -184,6 +189,9 @@ export default defineComponent({
     props: {
         facturas_props: Array
     },
+    mounted() {
+        this.$tabla('tabla')
+    },
     data() {
         return {
             facturas: this.facturas_props,
@@ -197,6 +205,11 @@ export default defineComponent({
         }
     },
     methods: {
+        logout() {
+            axios.post(route('web.logout')).then(res => {
+                window.location.href = route('login')
+            })
+        },
         eliminar(id) {
             axios.post(route('web.factura.delete'), { id: id }).then(res => {
                 this.$alert(res.data)

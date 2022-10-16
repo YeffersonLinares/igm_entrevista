@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\FacturaController;
+use App\Http\Controllers\PassportAuthController;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,29 +18,13 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', [FacturaController::class, 'index']);
+Route::get('/', [PassportAuthController::class, 'index']);
+Route::get('/login', [PassportAuthController::class, 'login_view'])->name('login');
+Route::post('/login', [PassportAuthController::class, 'login'])->name('web.login');
+Route::post('/logout', [PassportAuthController::class, 'logout'])->name('web.logout');
+Route::get('/is_log', [PassportAuthController::class, 'is_log'])->name('web.is_log');
+
+Route::get('/facturas', [FacturaController::class, 'index'])->name('web.factura.index');
 Route::post('/factura-store', [FacturaController::class, 'store'])->name('web.factura.store');
 Route::post('/factura-list', [FacturaController::class, 'list'])->name('web.factura.list');
 Route::post('/factura-delete', [FacturaController::class, 'delete'])->name('web.factura.delete');
-// Route::get('/factura-store', [FacturaController::class, 'store'])->name('web.factura.store');
-
-// Route::get('/', function () {
-//     return Inertia::render('Factura');
-// Route::get('/', function () {
-//     return Inertia::render('Welcome', [
-//         'canLogin' => Route::has('login'),
-//         'canRegister' => Route::has('register'),
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
-
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-});
