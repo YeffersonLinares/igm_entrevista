@@ -7,7 +7,7 @@
             </div>
             <div class="col-md-12 mb-3">
                 <Label>Contraseña</Label>
-                <Input v-model="credentials.password" />
+                <Input type="password" v-model="credentials.password" />
             </div>
             <div class="col-12 d-flex justify-content-center">
                 <Button @click="login()">Login</Button>
